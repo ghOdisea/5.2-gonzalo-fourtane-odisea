@@ -339,8 +339,6 @@ ORDER BY
     p.apellido2 ASC, 
     p.nombre ASC;
 
-
-
 /* Retorna un llistat amb el nom de les assignatures, any d'inici i any de fi del curs escolar de l'alumne/a amb NIF 26902806M. */
 SELECT 
     g.nombre as nombre_asignatura, 
@@ -423,11 +421,7 @@ WHERE p.tipo = 'profesor'
     && r.id_departamento IS NULL;
 
 /*Retorna un llistat amb els departaments que no tenen professors/es associats.*/
-
-
 /*Retorna un llistat amb els professors/es que no imparteixen cap assignatura.*/
-
-
 /*Retorna un llistat amb les assignatures que no tenen un professor/a assignat.*/
 /*Retorna un llistat amb tots els departaments que no han impartit assignatures en cap curs escolar.*/
 
