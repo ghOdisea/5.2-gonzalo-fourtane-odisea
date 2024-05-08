@@ -498,13 +498,64 @@ GROUP BY g.nombre;
 /*Retorna un llistat que mostri el nom dels graus i la suma del nombre total de crèdits que hi ha per a cada tipus d'assignatura. 
 El resultat ha de tenir tres columnes: nom del grau, tipus d'assignatura i la suma dels crèdits de totes les assignatures que hi ha d'aquest tipus.*/
 
-SELECT 
+SELECT DISTINCT
     g.nombre as grado, 
     a.tipo as tipo_de_asignatura, 
     a.creditos
-FROM 
+FROM grado g
+INNER JOIN asignatura a
+    ON g.id = a.id_grado;
 
-/*Retorna un llistat que mostri quants alumnes s'han matriculat d'alguna assignatura en cadascun dels cursos escolars. El resultat haurà de mostrar dues columnes, una columna amb l'any d'inici del curs escolar i una altra amb el nombre d'alumnes matriculats.
-Retorna un llistat amb el nombre d'assignatures que imparteix cada professor/a. El llistat ha de tenir en compte aquells professors/es que no imparteixen cap assignatura. El resultat mostrarà cinc columnes: id, nom, primer cognom, segon cognom i nombre d'assignatures. El resultat estarà ordenat de major a menor pel nombre d'assignatures.
-Retorna totes les dades de l'alumne/a més jove.
-Retorna un llistat amb els professors/es que tenen un departament associat i que no imparteixen cap assignatura. */
+
+/*Retorna un llistat que mostri quants alumnes s'han matriculat d'alguna assignatura en cadascun dels cursos escolars. 
+El resultat haurà de mostrar dues columnes, una columna amb l'any d'inici del curs escolar i una altra amb el nombre d'alumnes matriculats.*/
+SELECT DISTINCT 
+    c.anyo_inicio,
+    COUNT(a.id_alumno) as alumnos_matriculados
+FROM curso_escolar c
+INNER JOIN alumno_se_matricula_asignatura a
+    ON c.id = a.id_curso_escolar
+GROUP BY c.anyo_inicio;
+
+
+/*Retorna un llistat amb el nombre d'assignatures que imparteix cada professor/a. 
+El llistat ha de tenir en compte aquells professors/es que no imparteixen cap assignatura. 
+El resultat mostrarà cinc columnes: id, nom, primer cognom, segon cognom i nombre d'assignatures. 
+El resultat estarà ordenat de major a menor pel nombre d'assignatures.*/
+SELECT DISTINCT
+    r.id_profesor,
+    p.nombre,
+    p.apellido1 as primer_apellido,
+    p.apellido2 as segundo_apellido,
+    COUNT(a.id)
+FROM profesor r
+RIGHT JOIN asignatura a 
+    ON r.id_profesor = a.id
+LEFT JOIN persona p 
+    ON p.id = r.id_profesor
+GROUP BY r.id_profesor
+ORDER BY COUNT(a.id);
+
+/*Retorna totes les dades de l'alumne/a més jove.*/
+SELECT * 
+FROM persona
+WHERE tipo = 'alumno'
+ORDER BY fecha_nacimiento DESC
+LIMIT 1;
+
+/*Retorna un llistat amb els professors/es que tenen un departament associat i que no imparteixen cap assignatura. */
+
+SELECT 
+    r.id_profesor,
+    p.nombre,
+    p.apellido1,
+    d.nombre as nombre_departamento,
+    a.id_profesor as asignaturas_asociadas
+FROM persona p
+INNER JOIN profesor r
+    ON p.id = r.id_profesor
+INNER JOIN departamento d 
+    ON d.id = r.id_departamento
+RIGHT JOIN asignatura a 
+    ON a.id_profesor IS NULL;
+ 
