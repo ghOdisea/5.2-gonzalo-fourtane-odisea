@@ -266,52 +266,46 @@ Si us plau, descàrrega la base de dades del fitxer schema_universidad.sql, visu
 /* Retorna un llistat amb el primer cognom, segon cognom i el nom de tots els/les alumnes. 
 El llistat haurà d'estar ordenat alfabèticament de menor a major pel primer cognom, segon cognom i nom.*/
 SELECT DISTINCT  
-    p.apellido1 as primer_apellido, 
-    p.apellido2 as segundo_apellido, 
-    p.nombre, 
-    p.id 
-FROM 
-    persona p, 
-    alumno_se_matricula_asignatura a
-WHERE p.id = a.id_alumno
+    apellido1 as primer_apellido, 
+    apellido2 as segundo_apellido, 
+    nombre, 
+    id 
+FROM persona
+WHERE tipo = 'alumno'
 ORDER BY 
-    p.apellido1, 
-    p.apellido2, 
-    p.nombre;
+    apellido1, 
+    apellido2, 
+    nombre;
 
 /* Esbrina el nom i els dos cognoms dels alumnes que no han donat d'alta el seu número de telèfon en la base de dades. */
 SELECT DISTINCT 
-    p.apellido1 as primer_apellido, 
-    p.apellido2 as segundo_apellido, 
-    p.nombre, 
-    p.telefono
-FROM 
-    persona p, 
-    alumno_se_matricula_asignatura a
-WHERE p.id = a.id_alumno
-    AND p.telefono IS NULL;
+    apellido1 as primer_apellido, 
+    apellido2 as segundo_apellido, 
+    nombre, 
+    telefono
+FROM persona
+WHERE tipo = 'alumno'
+    AND telefono IS NULL;
 
-/* Retorna el llistat dels alumnes que van néixer en 1999.   (No hay alumnos matriculados, nacidos en el año 1999) 1998*   */
+/* Retorna el llistat dels alumnes que van néixer en 1999. */
 SELECT DISTINCT 
-    p.apellido1 as primer_apellido, 
-    p.apellido2 as segundo_apellido, 
-    p.nombre, 
-    p.fecha_nacimiento
-FROM 
-    persona p, 
-    alumno_se_matricula_asignatura a
-WHERE p.id = a.id_alumno && YEAR(p.fecha_nacimiento) = 1998;
+    apellido1 as primer_apellido, 
+    apellido2 as segundo_apellido, 
+    nombre, 
+    fecha_nacimiento
+FROM  persona 
+WHERE tipo= 'alumno' && YEAR(fecha_nacimiento) = 1999;
 
 /* Retorna el llistat de professors/es que no han donat d'alta el seu número de telèfon en la base de dades i a més el seu NIF acaba en K. */
 SELECT DISTINCT 
-    p.apellido1 as primer_apellido, 
-    p.apellido2 as segundo_apellido, 
-    p.nombre, p.telefono
-FROM 
-    persona p, 
-    profesor f
-WHERE p.id = f.id_profesor
-    AND p.telefono IS NULL;
+    apellido1 as primer_apellido, 
+    apellido2 as segundo_apellido, 
+    nombre, 
+    telefono
+FROM persona 
+WHERE tipo = 'profesor'
+    AND telefono IS NULL
+    AND nif REGEXP 'K$';
 
 /* Retorna el llistat de les assignatures que s'imparteixen en el primer quadrimestre, en el tercer curs del grau que té l'identificador 7. */
 SELECT *
@@ -359,7 +353,7 @@ WHERE p.nif = '26902806M';
 %Ingeniería Informática (Plan 2015)%
 
 */
-SELECT d.nombre
+SELECT  DISTINCT d.nombre
 FROM departamento d
 INNER JOIN profesor p 
     ON d.id = p.id_departamento
@@ -367,8 +361,8 @@ INNER JOIN asignatura g
     ON p.id_profesor = g.id_profesor
 INNER JOIN grado r 
     ON g.id_grado = r.id
-WHERE r.nombre = '%2015%';
-
+WHERE r.id = 4;
+#############################################
 
 /* Retorna un llistat amb tots els alumnes que s'han matriculat en alguna assignatura durant el curs escolar 2018/2019. */ 
 SELECT DISTINCT 
@@ -390,6 +384,8 @@ Retorna un llistat amb els noms de tots els professors/es i els departaments que
 El llistat també ha de mostrar aquells professors/es que no tenen cap departament associat. 
 El llistat ha de retornar quatre columnes, nom del departament, primer cognom, segon cognom i nom del professor/a. 
 El resultat estarà ordenat alfabèticament de menor a major pel nom del departament, cognoms i el nom.*/
+select * from persona where tipo = 'profesor'
+
 SELECT 
     d.nombre as nombre_departamento, 
     p.apellido1 as primer_apellido_profe, 
@@ -420,6 +416,14 @@ WHERE p.tipo = 'profesor'
     && r.id_departamento IS NULL;
 
 /*Retorna un llistat amb els departaments que no tenen professors/es associats.*/
+
+SELECT d.id as id_departament, d.nombre as nombre_departament
+FROM departamento d
+LEFT JOIN profesor p
+    ON d.id = p.id_departamento
+WHERE p.id_profesor IS NULL;
+
+
 /*Retorna un llistat amb els professors/es que no imparteixen cap assignatura.*/
 /*Retorna un llistat amb les assignatures que no tenen un professor/a assignat.*/
 /*Retorna un llistat amb tots els departaments que no han impartit assignatures en cap curs escolar.*/
@@ -437,8 +441,8 @@ WHERE tipo = 'alumno';
 
 /*Calcula quants alumnes van néixer en 1999.*/
 SELECT 
-    COUNT(p.id) as Alumnos_nacidos_99
-FROM persona p 
+    COUNT(id) as Alumnos_nacidos_99
+FROM persona
 WHERE tipo = 'alumno' 
     AND YEAR(fecha_nacimiento) = 1999;
 
@@ -455,7 +459,8 @@ FROM departamento d
 INNER JOIN profesor p
     ON p.id_departamento = d.id
 WHERE p.id_departamento IS NOT NULL
-GROUP BY d.nombre;
+GROUP BY d.nombre
+ORDER BY COUNT(p.id_profesor) DESC;
 
 /*
 /*Retorna un llistat amb tots els departaments i el nombre de professors/es que hi ha en cadascun d'ells. 
@@ -482,7 +487,7 @@ FROM grado g
 LEFT JOIN asignatura a
     ON g.id = a.id_grado
 GROUP BY g.nombre
-ORDER BY g.nombre ASC;
+ORDER BY COUNT(a.id) DESC;
 
 /*Retorna un llistat amb el nom de tots els graus existents en la base de dades i el nombre d'assignatures que té cadascun, dels graus que tinguin més de 40 assignatures associades.*/
 SELECT 
@@ -491,28 +496,30 @@ SELECT
 FROM grado g
 INNER JOIN asignatura a
     ON g.id = a.id_grado
-GROUP BY g.nombre;
-
+GROUP BY g.nombre
+HAVING COUNT(a.id) > 50
+ORDER BY COUNT(a.id) DESC;
 
 /*Retorna un llistat que mostri el nom dels graus i la suma del nombre total de crèdits que hi ha per a cada tipus d'assignatura. 
 El resultat ha de tenir tres columnes: nom del grau, tipus d'assignatura i la suma dels crèdits de totes les assignatures que hi ha d'aquest tipus.*/
 
-SELECT DISTINCT
+SELECT 
     g.nombre as grado, 
     a.tipo as tipo_de_asignatura, 
-    a.creditos
+    SUM(a.creditos)
 FROM grado g
 INNER JOIN asignatura a
-    ON g.id = a.id_grado;
+    ON g.id = a.id_grado
+GROUP BY g.nombre, a.tipo;
 
 
 /*Retorna un llistat que mostri quants alumnes s'han matriculat d'alguna assignatura en cadascun dels cursos escolars. 
 El resultat haurà de mostrar dues columnes, una columna amb l'any d'inici del curs escolar i una altra amb el nombre d'alumnes matriculats.*/
 SELECT DISTINCT 
     c.anyo_inicio,
-    COUNT(a.id_alumno) as alumnos_matriculados
-FROM curso_escolar c
-INNER JOIN alumno_se_matricula_asignatura a
+    COUNT(DISTINCT a.id_alumno) as alumnos_matriculados
+FROM curso_escolar c 
+LEFT JOIN alumno_se_matricula_asignatura a
     ON c.id = a.id_curso_escolar
 GROUP BY c.anyo_inicio;
 
@@ -526,14 +533,14 @@ SELECT DISTINCT
     p.nombre,
     p.apellido1 as primer_apellido,
     p.apellido2 as segundo_apellido,
-    COUNT(a.id)
+    COUNT(a.id) as num_asignaturas
 FROM profesor r
-RIGHT JOIN asignatura a 
-    ON r.id_profesor = a.id
-LEFT JOIN persona p 
+INNER JOIN persona p 
     ON p.id = r.id_profesor
+LEFT JOIN asignatura a 
+    USING(id_profesor)
 GROUP BY r.id_profesor
-ORDER BY COUNT(a.id);
+ORDER BY COUNT(a.id) DESC;
 
 /*Retorna totes les dades de l'alumne/a més jove.*/
 SELECT * 
@@ -544,7 +551,7 @@ LIMIT 1;
 
 /*Retorna un llistat amb els professors/es que tenen un departament associat i que no imparteixen cap assignatura. */
 
-SELECT 
+SELECT DISTINCT
     r.id_profesor,
     p.nombre,
     p.apellido1,
@@ -555,6 +562,8 @@ INNER JOIN profesor r
     ON p.id = r.id_profesor
 INNER JOIN departamento d 
     ON d.id = r.id_departamento
-RIGHT JOIN asignatura a 
-    ON a.id_profesor IS NULL;
+LEFT JOIN asignatura a 
+    USING (id_profesor) 
+WHERE a.id_profesor IS NULL;
+
  
