@@ -270,7 +270,6 @@ SELECT DISTINCT
     p.apellido2 as segundo_apellido, 
     p.nombre, 
     p.id 
-    /*, p.fecha_nacimiento*/
 FROM 
     persona p, 
     alumno_se_matricula_asignatura a
